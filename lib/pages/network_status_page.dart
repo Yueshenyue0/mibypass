@@ -12,10 +12,11 @@ class NetworkStatusPage extends StatefulWidget {
 }
 
 class _NetworkStatusPageState extends State<NetworkStatusPage> {
-  late bool _online;
-  late String _deviceModel;
-  late String _system;
+  bool _online = false;
+  String _deviceModel = '';
+  String _system = '';
   Timer? _timer;
+  bool _checking = true;
 
   @override
   void initState() {
@@ -31,35 +32,46 @@ class _NetworkStatusPageState extends State<NetworkStatusPage> {
     super.dispose();
   }
 
-  void _loadDevice() {
-    final p = Platform;
-    String model = '';
-    String android = '';
+  Future<void> _loadDevice() async {
     try {
-      model = p.environment['ro.product.model'] ?? '';
+      final model = await _getProp('ro.product.model');
+      final release = await _getProp('ro.build.version.release');
+      if (!mounted) return;
+      setState(() {
+        _deviceModel = model.isNotEmpty ? model : 'Android 设备';
+        _system = release.isNotEmpty ? 'Android $release' : 'Android';
+      });
     } catch (_) {}
-    if (model.isEmpty) model = 'Android 设备';
-    try {
-      android = p.environment['ro.build.version.release'] ?? '';
-    } catch (_) {}
-    _deviceModel = model;
-    _system = android.isNotEmpty ? 'Android $android' : 'Android';
   }
 
-  Future<void> _check() async {
-    final before = _online;
-    final ok = await _hasNetwork();
-    if (!mounted) return;
-    if (ok != before) {
-      setState(() => _online = ok);
+  /// 读 Android 系统属性（getprop 是公开命令，普通 App 也能执行）
+  Future<String> _getProp(String key) async {
+    try {
+      final r = await Process.run('getprop', [key]);
+      return (r.stdout as String).trim();
+    } catch (_) {
+      return '';
     }
   }
 
+  Future<void> _check() async {
+    final ok = await _hasNetwork();
+    if (!mounted) return;
+    setState(() {
+      _online = ok;
+      _checking = false;
+    });
+  }
+
+  /// 轻量 HTTP 探活：连得通任意 HTTPS 服务即视为在线
   Future<bool> _hasNetwork() async {
     try {
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 2));
-      return result.isNotEmpty && result.first.address.isNotEmpty;
+      final client = HttpClient()..connectionTimeout = const Duration(seconds: 3);
+      final req = await client.getUrl(Uri.parse('https://api.github.com'));
+      final resp = await req.close().timeout(const Duration(seconds: 4));
+      await resp.drain<void>();
+      client.close();
+      return true;
     } catch (_) {
       return false;
     }
@@ -76,13 +88,15 @@ class _NetworkStatusPageState extends State<NetworkStatusPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              _online ? Icons.check_circle : Icons.warning_rounded,
+              _checking
+                  ? Icons.hourglass_empty
+                  : (_online ? Icons.check_circle : Icons.warning_rounded),
               size: 84,
-              color: color,
+              color: _checking ? theme.colors.primaryVariant : color,
             ),
             const SizedBox(height: 14),
             MiuixText(
-              _online ? '已联网' : '未联网',
+              _checking ? '检测中...' : (_online ? '已联网' : '未联网'),
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -90,9 +104,17 @@ class _NetworkStatusPageState extends State<NetworkStatusPage> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                MiuixText(_deviceModel, fontSize: 14, color: color),
+                MiuixText(
+                  _deviceModel,
+                  fontSize: 14,
+                  color: theme.colors.onSurfaceVariantSummary,
+                ),
                 const SizedBox(width: 14),
-                MiuixText(_system, fontSize: 14, color: color),
+                MiuixText(
+                  _system,
+                  fontSize: 14,
+                  color: theme.colors.onSurfaceVariantSummary,
+                ),
               ],
             ),
           ],
