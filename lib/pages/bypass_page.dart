@@ -74,7 +74,7 @@ class _BypassPageState extends State<BypassPage> {
     if (!mounted) return;
 
     final key = _genKey();
-    await _cacheKey(raw, key); // 静默记录
+    await _saveCache(raw, key); // 静默记录
     if (!mounted) return;
     setState(() {
       _resultKey = key;
@@ -100,7 +100,7 @@ class _BypassPageState extends State<BypassPage> {
     return null;
   }
 
-  Future<void> _cacheKey(String link, String key) async {
+  Future<void> _saveCache(String link, String key) async {
     try {
       final sp = await SharedPreferences.getInstance();
       final map = sp.getString(_cacheKey) ?? '';
