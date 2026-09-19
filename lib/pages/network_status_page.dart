@@ -4,6 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
 
+/// 页面背景：浅灰色（InstallerX 风格）——与 main.dart 保持一致
+const Color kPageBackground = Color(0xFFF2F2F7);
+
 /// 联网状态页（InstallerX 风格）：
 /// 顶部一张横向状态卡片（大图标 + 状态文字），
 /// 下方「机型」「系统」各自独立卡片，相互有间距。
@@ -122,7 +125,7 @@ class _NetworkStatusPageState extends State<NetworkStatusPage> {
         : '未联网';
 
     return Container(
-      color: theme.colors.background,
+      color: kPageBackground,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
         children: [

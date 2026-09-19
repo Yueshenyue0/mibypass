@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_miuix/miuix.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../obfuscation.dart';
+
+/// 页面背景：浅灰色（InstallerX 风格）——与 main/network 页保持一致
+const Color kPageBackground = Color(0xFFF2F2F7);
 
 class BypassPage extends StatefulWidget {
   const BypassPage({super.key});
@@ -14,7 +17,8 @@ class BypassPage extends StatefulWidget {
 }
 
 class _BypassPageState extends State<BypassPage> {
-  static const String _prefix = 'https://auth.platorelay.com/a?d=';
+  // 运行时 XOR 还原，字符串池里是乱码（防 Blutter dump 明文）
+  static final String _prefix = kPrefix;
   static const String _cacheKey = 'delta_bypass_cache';
 
   final TextEditingController _input = TextEditingController();
@@ -176,7 +180,7 @@ class _BypassPageState extends State<BypassPage> {
     }
 
     return Container(
-      color: theme.colors.background,
+      color: kPageBackground,
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
         child: Column(

@@ -8,6 +8,9 @@ void main() {
   runApp(const MiApp());
 }
 
+/// 页面背景：浅灰色（InstallerX 风格，让白色卡片浮起来）
+const Color kPageBackground = Color(0xFFF2F2F7);
+
 class MiApp extends StatelessWidget {
   const MiApp({super.key});
 
@@ -27,6 +30,7 @@ class MiApp extends StatelessWidget {
                 seedColor: theme.colors.primary,
                 brightness: theme.brightness,
               ),
+              scaffoldBackgroundColor: kPageBackground,
             ),
             home: const HomeTabRoot(),
           );
@@ -49,23 +53,20 @@ class _HomeTabRootState extends State<HomeTabRoot> {
   @override
   Widget build(BuildContext context) {
     final theme = MiuixTheme.of(context);
-    // MiuixFloatingNavigationBar 内部自带底部系统区留白：
-    //   有手势条/虚拟键(inset>0) → 26+inset，药丸高52 → 总高 78+inset
-    //   无系统区(inset==0)       → 36，       药丸高52 → 总高 88
-    // 外层不用 SafeArea，避免双重 inset；高度动态给，让药丸始终贴底。
+    // 底部悬浮导航栏高度（含底部系统区留白）
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    final barHeight = bottomInset > 0 ? 78.0 + bottomInset : 88.0;
+    final navHeight = 76.0 + bottomInset;
 
     return Scaffold(
-      backgroundColor: theme.colors.background,
+      backgroundColor: kPageBackground,
       body: Stack(
         children: [
-          // 内容区：铺满全屏，顶部避开状态栏，底部预留悬浮栏空间
+          // 内容区：铺满全屏，避开状态栏 + 底部导航栏
           Positioned.fill(
             child: Padding(
               padding: EdgeInsets.only(
                 top: MediaQuery.paddingOf(context).top,
-                bottom: barHeight,
+                bottom: navHeight,
               ),
               child: IndexedStack(
                 index: _tab,
@@ -76,38 +77,112 @@ class _HomeTabRootState extends State<HomeTabRoot> {
               ),
             ),
           ),
-          // 底部悬浮tab：必须用固定高度容器限制内部 Align 扩张，
-          // 否则 MiuixFloatingNavigationBar 内部的 Align(center) 会铺满全屏
-          // 把药丸导航甩到屏幕正中间。
+          // 底部悬浮导航栏：自绘 + 黑块滑动动效
           Align(
             alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              height: barHeight,
-              child: MiuixFloatingNavigationBar(
-                children: [
-                  MiuixFloatingNavigationBarItem(
-                    selected: _tab == 0,
-                    icon: MiuixIcon(
-                      vector: MiuixIcons.extended.byName('home')!,
-                      size: 24,
-                    ),
-                    label: '联网',
-                    onPressed: () => setState(() => _tab = 0),
-                  ),
-                  MiuixFloatingNavigationBarItem(
-                    selected: _tab == 1,
-                    icon: MiuixIcon(
-                      vector: MiuixIcons.extended.byName('link')!,
-                      size: 24,
-                    ),
-                    label: 'Bypass',
-                    onPressed: () => setState(() => _tab = 1),
-                  ),
-                ],
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 12 + bottomInset),
+              child: _FloatingNavBar(
+                selectedIndex: _tab,
+                onSelect: (i) => setState(() => _tab = i),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 自绘悬浮导航栏：白色药丸容器 + 半透明黑块指示器（AnimatedAlign 平滑滑动）
+class _FloatingNavBar extends StatefulWidget {
+  const _FloatingNavBar({
+    required this.selectedIndex,
+    required this.onSelect,
+  });
+
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+
+  @override
+  State<_FloatingNavBar> createState() => _FloatingNavBarState();
+}
+
+class _FloatingNavBarState extends State<_FloatingNavBar> {
+  static const double _itemWidth = 92;
+  static const double _barPadding = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 62,
+      padding: const EdgeInsets.all(_barPadding),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // 滑动黑块：AnimatedAlign 平滑移动
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment(
+              widget.selectedIndex == 0 ? -1 : 1,
+              0,
+            ),
+            child: Container(
+              width: _itemWidth,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          // 两个导航项
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(0, Icons.home_rounded, '联网'),
+              _navItem(1, Icons.link_rounded, 'Bypass'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _navItem(int index, IconData icon, String label) {
+    final selected = widget.selectedIndex == index;
+    final color = selected ? Colors.black87 : Colors.black38;
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: () => widget.onSelect(index),
+      child: SizedBox(
+        width: _itemWidth,
+        height: 50,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 24, color: color),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
