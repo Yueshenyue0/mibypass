@@ -44,13 +44,13 @@ class _BypassPageState extends State<BypassPage> {
     }
 
     _resultKey = null;
+    _busy = true;
     setState(() {
       _logs
         ..clear()
         ..add('收到链接');
     });
 
-    _busy = true;
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
     setState(() => _logs.add('正在绕过 captcha...'));
@@ -84,18 +84,25 @@ class _BypassPageState extends State<BypassPage> {
     final k = _resultKey;
     if (k == null) return;
     await Clipboard.setData(ClipboardData(text: k));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: MiuixText('已复制', color: Colors.white),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = MiuixTheme.of(context);
     final primary = theme.colors.primary;
-    final done = _resultKey != null;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 8),
           Center(
             child: MiuixText(
               'Delta Bypass',
@@ -103,33 +110,47 @@ class _BypassPageState extends State<BypassPage> {
               fontWeight: FontWeight.w700,
             ),
           ),
+          const SizedBox(height: 16),
+          // 输入区：始终保留，可多次绕过
+          MiuixTextField(
+            controller: _input,
+            label: '输入忍者链接',
+            useLabelAsPlaceholder: true,
+            singleLine: true,
+            enabled: !_busy,
+            keyboardType: TextInputType.url,
+          ),
           const SizedBox(height: 12),
-          // 输入区：完成前是输入框+按钮；完成后缩小
-          AnimatedCrossFade(
-            firstChild: Column(
-              children: [
-                MiuixTextField(
-                  controller: _input,
-                  label: '输入忍者链接',
-                  useLabelAsPlaceholder: true,
-                  singleLine: true,
-                  enabled: !_busy,
-                  keyboardType: TextInputType.url,
-                ),
-                const SizedBox(height: 12),
-                MiuixButton(
-                  onPressed: _busy ? null : _bypass,
-                  child: MiuixText('绕过', color: Colors.white),
-                ),
-              ],
+          MiuixButton(
+            onPressed: _busy ? null : _bypass,
+            child: MiuixText('绕过', color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          // 输出区：日志
+          if (_logs.isNotEmpty)
+            MiuixCard(
+              insideMargin: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final l in _logs)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: MiuixText(l, fontSize: 14),
+                    ),
+                ],
+              ),
             ),
-            secondChild: MiuixCard(
+          // key 卡片：完成后在输出区下方弹出，可多次生成（新 key 覆盖旧卡片）
+          if (_resultKey != null) ...[
+            const SizedBox(height: 12),
+            MiuixCard(
               insideMargin: const EdgeInsets.all(14),
               child: Row(
                 children: [
                   Expanded(
                     child: SelectableText(
-                      _resultKey ?? '',
+                      _resultKey!,
                       style: TextStyle(
                         color: theme.colors.onSurface,
                         fontSize: 15,
@@ -144,26 +165,7 @@ class _BypassPageState extends State<BypassPage> {
                 ],
               ),
             ),
-            crossFadeState: done ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 300),
-          ),
-          const SizedBox(height: 14),
-          // 输出区
-          if (_logs.isNotEmpty)
-            MiuixCard(
-              insideMargin: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  MiuixText('输出', fontSize: 13, color: theme.colors.onSurfaceVariantSummary),
-                  const SizedBox(height: 6),
-                  for (final l in _logs)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: MiuixText(l, fontSize: 14),
-                    ),
-                ],
-              ),
-            ),
+          ],
         ],
       ),
     );
