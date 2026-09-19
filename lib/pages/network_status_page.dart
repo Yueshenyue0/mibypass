@@ -102,8 +102,9 @@ class _NetworkStatusPageState extends State<NetworkStatusPage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
       children: [
-        // 顶部横向状态卡片：大图标 + 状态文字并排
+        // 顶部横向状态卡片：大图标 + 状态文字并排（胶囊）
         MiuixCard(
+          cornerRadius: 28,
           insideMargin: const EdgeInsets.all(20),
           child: Row(
             children: [
@@ -132,8 +133,9 @@ class _NetworkStatusPageState extends State<NetworkStatusPage> {
           ),
         ),
         const SizedBox(height: 12),
-        // 机型卡片
+        // 机型卡片（胶囊）
         MiuixCard(
+          cornerRadius: 28,
           insideMargin: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
@@ -162,8 +164,9 @@ class _NetworkStatusPageState extends State<NetworkStatusPage> {
           ),
         ),
         const SizedBox(height: 12),
-        // 系统卡片
+        // 系统卡片（胶囊）
         MiuixCard(
+          cornerRadius: 28,
           insideMargin: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
