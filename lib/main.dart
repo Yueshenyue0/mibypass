@@ -59,22 +59,22 @@ class _HomeTabRootState extends State<HomeTabRoot> {
           ],
         ),
       ),
-      bottomBar: MiuixNavigationBar(
+      bottomBar: MiuixFloatingNavigationBar(
         children: [
-          MiuixNavigationBarItem(
+          MiuixFloatingNavigationBarItem(
             selected: _tab == 0,
             icon: MiuixIcon(
               vector: MiuixIcons.extended.byName('home')!,
-              size: 22,
+              size: 24,
             ),
             label: '联网',
             onPressed: () => setState(() => _tab = 0),
           ),
-          MiuixNavigationBarItem(
+          MiuixFloatingNavigationBarItem(
             selected: _tab == 1,
             icon: MiuixIcon(
               vector: MiuixIcons.extended.byName('link')!,
-              size: 22,
+              size: 24,
             ),
             label: 'Bypass',
             onPressed: () => setState(() => _tab = 1),
