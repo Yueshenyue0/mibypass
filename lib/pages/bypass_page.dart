@@ -26,11 +26,6 @@ class _BypassPageState extends State<BypassPage> {
     super.dispose();
   }
 
-  void _addLog(String s) {
-    if (!mounted) return;
-    setState(() => _logs.add(s));
-  }
-
   Future<void> _bypass() async {
     final raw = _input.text.trim();
     if (!raw.startsWith(_prefix)) {
@@ -94,6 +89,16 @@ class _BypassPageState extends State<BypassPage> {
     );
   }
 
+  /// 每条日志附带一个小图标，让输出框不再单调。
+  IconData _logIcon(String l) {
+    if (l.contains('错误')) return Icons.error_rounded;
+    if (l.contains('完成')) return Icons.check_circle_rounded;
+    if (l.contains('captcha')) return Icons.shield_rounded;
+    if (l.contains('key') || l.contains('KEY')) return Icons.key_rounded;
+    if (l.contains('收到')) return Icons.link_rounded;
+    return Icons.info_rounded;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = MiuixTheme.of(context);
@@ -121,12 +126,31 @@ class _BypassPageState extends State<BypassPage> {
             keyboardType: TextInputType.url,
           ),
           const SizedBox(height: 12),
+          // 绕过按钮：可点时蓝色（primary），点击后灰色+转圈
           MiuixButton(
             onPressed: _busy ? null : _bypass,
-            child: MiuixText('绕过', color: Colors.white),
+            colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+            child: _busy
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      MiuixCircularProgressIndicator(
+                        size: 18,
+                        strokeWidth: 2,
+                        colors: const MiuixProgressIndicatorColors(
+                          foregroundColor: Colors.white,
+                          disabledForegroundColor: Colors.white54,
+                          backgroundColor: Colors.white24,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      MiuixText('绕过中...', color: Colors.white),
+                    ],
+                  )
+                : MiuixText('绕过', color: Colors.white),
           ),
           const SizedBox(height: 16),
-          // 输出区：日志
+          // 输出区：带状态图标的日志列表
           if (_logs.isNotEmpty)
             MiuixCard(
               insideMargin: const EdgeInsets.all(14),
@@ -135,8 +159,27 @@ class _BypassPageState extends State<BypassPage> {
                 children: [
                   for (final l in _logs)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: MiuixText(l, fontSize: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2, right: 8),
+                            child: Icon(
+                              _logIcon(l),
+                              size: 16,
+                              color: l.contains('错误')
+                                  ? theme.colors.error
+                                  : l.contains('完成')
+                                      ? theme.colors.primary
+                                      : theme.colors.onSurfaceVariantSummary,
+                            ),
+                          ),
+                          Expanded(
+                            child: MiuixText(l, fontSize: 14),
+                          ),
+                        ],
+                      ),
                     ),
                 ],
               ),
@@ -148,6 +191,12 @@ class _BypassPageState extends State<BypassPage> {
               insideMargin: const EdgeInsets.all(14),
               child: Row(
                 children: [
+                  Icon(
+                    Icons.key_rounded,
+                    size: 22,
+                    color: theme.colors.primary,
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: SelectableText(
                       _resultKey!,
@@ -158,9 +207,9 @@ class _BypassPageState extends State<BypassPage> {
                       ),
                     ),
                   ),
-                  MiuixButton(
+                  MiuixTextButton(
+                    '复制',
                     onPressed: _copy,
-                    child: MiuixText('复制', color: primary),
                   ),
                 ],
               ),
