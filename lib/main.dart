@@ -48,38 +48,54 @@ class _HomeTabRootState extends State<HomeTabRoot> {
 
   @override
   Widget build(BuildContext context) {
-    return MiuixScaffold(
-      content: (padding) => Padding(
-        padding: padding,
-        child: IndexedStack(
-          index: _tab,
-          children: const [
-            NetworkStatusPage(),
-            BypassPage(),
+    final theme = MiuixTheme.of(context);
+
+    return Scaffold(
+      backgroundColor: theme.colors.background,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // 内容区：铺满全屏，绝不空白
+            Positioned.fill(
+              child: IndexedStack(
+                index: _tab,
+                children: const [
+                  NetworkStatusPage(),
+                  BypassPage(),
+                ],
+              ),
+            ),
+            // 底部悬浮 tab（InstallerX 风格药丸）
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: MiuixFloatingNavigationBar(
+                  children: [
+                    MiuixFloatingNavigationBarItem(
+                      selected: _tab == 0,
+                      icon: MiuixIcon(
+                        vector: MiuixIcons.extended.byName('home')!,
+                        size: 24,
+                      ),
+                      label: '联网',
+                      onPressed: () => setState(() => _tab = 0),
+                    ),
+                    MiuixFloatingNavigationBarItem(
+                      selected: _tab == 1,
+                      icon: MiuixIcon(
+                        vector: MiuixIcons.extended.byName('link')!,
+                        size: 24,
+                      ),
+                      label: 'Bypass',
+                      onPressed: () => setState(() => _tab = 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
-      ),
-      bottomBar: MiuixFloatingNavigationBar(
-        children: [
-          MiuixFloatingNavigationBarItem(
-            selected: _tab == 0,
-            icon: MiuixIcon(
-              vector: MiuixIcons.extended.byName('home')!,
-              size: 24,
-            ),
-            label: '联网',
-            onPressed: () => setState(() => _tab = 0),
-          ),
-          MiuixFloatingNavigationBarItem(
-            selected: _tab == 1,
-            icon: MiuixIcon(
-              vector: MiuixIcons.extended.byName('link')!,
-              size: 24,
-            ),
-            label: 'Bypass',
-            onPressed: () => setState(() => _tab = 1),
-          ),
-        ],
       ),
     );
   }
