@@ -109,14 +109,11 @@ class _FloatingNavBar extends StatefulWidget {
 }
 
 class _FloatingNavBarState extends State<_FloatingNavBar> {
-  static const double _itemWidth = 92;
-  static const double _barPadding = 6;
-
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 62,
-      padding: const EdgeInsets.all(_barPadding),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
@@ -128,33 +125,38 @@ class _FloatingNavBarState extends State<_FloatingNavBar> {
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          // 滑动黑块：AnimatedAlign 平滑移动
-          AnimatedAlign(
-            duration: const Duration(milliseconds: 280),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment(
-              widget.selectedIndex == 0 ? -1 : 1,
-              0,
-            ),
-            child: Container(
-              width: _itemWidth,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-          // 两个导航项
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+      // LayoutBuilder 拿到内容区精确宽度，黑块按坐标滑动，与导航项绝对对齐
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final half = c.maxWidth / 2;
+          const pad = 6.0; // 黑块左右留白，让选中项两侧露出白边
+          return Stack(
             children: [
-              _navItem(0, Icons.home_rounded, '联网'),
-              _navItem(1, Icons.link_rounded, 'Bypass'),
+              // 滑动黑块指示器
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                left: widget.selectedIndex * half + pad,
+                top: 0,
+                bottom: 0,
+                width: half - pad * 2,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              // 两个导航项：均分宽度，黑块正好落在选中项上
+              Row(
+                children: [
+                  Expanded(child: _navItem(0, Icons.home_rounded, '联网')),
+                  Expanded(child: _navItem(1, Icons.link_rounded, 'Bypass')),
+                ],
+              ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -166,7 +168,6 @@ class _FloatingNavBarState extends State<_FloatingNavBar> {
       borderRadius: BorderRadius.circular(999),
       onTap: () => widget.onSelect(index),
       child: SizedBox(
-        width: _itemWidth,
         height: 50,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
