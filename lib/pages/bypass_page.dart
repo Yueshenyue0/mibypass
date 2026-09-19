@@ -153,129 +153,150 @@ class _BypassPageState extends State<BypassPage> {
   @override
   Widget build(BuildContext context) {
     final theme = MiuixTheme.of(context);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: MiuixText(
-              'Delta Bypass',
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // 输入区标题（提示词移到输入框上方，输入文字不残留）
-          MiuixText(
-            '输入忍者链接',
-            fontSize: 14,
-            color: theme.colors.onSurfaceVariantSummary,
-          ),
-          const SizedBox(height: 8),
-          // 胶囊输入框：无 placeholder，输入全程干净
-          MiuixTextField(
-            controller: _input,
-            label: '',
-            singleLine: true,
-            enabled: !_busy,
-            keyboardType: TextInputType.url,
-            cornerRadius: 28,
-          ),
-          const SizedBox(height: 12),
-          // 绕过按钮：可点时蓝色（primary），点击后灰色+转圈
-          MiuixButton(
-            onPressed: _busy ? null : _bypass,
-            colors: MiuixButtonDefaults.buttonColorsPrimary(context),
-            cornerRadius: 28,
-            child: _busy
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      MiuixCircularProgressIndicator(
-                        size: 18,
-                        strokeWidth: 2,
-                        colors: const MiuixProgressIndicatorColors(
-                          foregroundColor: Colors.white,
-                          disabledForegroundColor: Colors.white54,
-                          backgroundColor: Colors.white24,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      MiuixText('绕过中...', color: Colors.white),
-                    ],
-                  )
-                : MiuixText('绕过', color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          // 输出区：胶囊卡片 + 状态图标日志
-          if (_logs.isNotEmpty)
-            MiuixCard(
-              cornerRadius: 28,
-              insideMargin: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final l in _logs)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2, right: 8),
-                            child: Icon(
-                              _logIcon(l),
-                              size: 16,
-                              color: l.contains('错误')
-                                  ? theme.colors.error
-                                  : l.contains('完成')
-                                      ? theme.colors.primary
-                                      : theme.colors.onSurfaceVariantSummary,
-                            ),
-                          ),
-                          Expanded(
-                            child: MiuixText(l, fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          // key 胶囊卡片：完成后在输出区下方弹出
-          if (_resultKey != null) ...[
-            const SizedBox(height: 12),
-            MiuixCard(
-              cornerRadius: 28,
-              insideMargin: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.key_rounded,
-                    size: 22,
-                    color: theme.colors.primary,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: SelectableText(
-                      _resultKey!,
-                      style: TextStyle(
-                        color: theme.colors.onSurface,
-                        fontSize: 15,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                  MiuixTextButton(
-                    '复制',
-                    onPressed: _copy,
-                  ),
-                ],
-              ),
+    final surface = Theme.of(context).colorScheme.surface;
+
+    // 白色圆角卡片包装（浮在背景上，与主页风格统一）
+    Widget wrapCard(Widget child) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
-        ],
+        ),
+        child: child,
+      );
+    }
+
+    return Container(
+      color: theme.colors.background,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: MiuixText(
+                'Delta Bypass',
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 输入区标题（提示词移到输入框上方，输入文字不残留）
+            MiuixText(
+              '输入忍者链接',
+              fontSize: 14,
+              color: theme.colors.onSurfaceVariantSummary,
+            ),
+            const SizedBox(height: 8),
+            // 密码输入框：无 placeholder，输入全程干净
+            MiuixTextField(
+              controller: _input,
+              label: '',
+              singleLine: true,
+              enabled: !_busy,
+              keyboardType: TextInputType.url,
+              cornerRadius: 24,
+            ),
+            const SizedBox(height: 12),
+            // 绕过按钮：可点时蓝色（primary），点击后灰色+转圈
+            MiuixButton(
+              onPressed: _busy ? null : _bypass,
+              colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+              cornerRadius: 24,
+              child: _busy
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        MiuixCircularProgressIndicator(
+                          size: 18,
+                          strokeWidth: 2,
+                          colors: const MiuixProgressIndicatorColors(
+                            foregroundColor: Colors.white,
+                            disabledForegroundColor: Colors.white54,
+                            backgroundColor: Colors.white24,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        MiuixText('绕过中...', color: Colors.white),
+                      ],
+                    )
+                  : MiuixText('绕过', color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            // 输出区：白色圆角卡片 + 状态图标日志
+            if (_logs.isNotEmpty)
+              wrapCard(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final l in _logs)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2, right: 8),
+                              child: Icon(
+                                _logIcon(l),
+                                size: 16,
+                                color: l.contains('错误')
+                                    ? theme.colors.error
+                                    : l.contains('完成')
+                                        ? theme.colors.primary
+                                        : theme.colors.onSurfaceVariantSummary,
+                              ),
+                            ),
+                            Expanded(
+                              child: MiuixText(l, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            // key 白色圆角卡片：完成后在输出区下方弹出
+            if (_resultKey != null) ...[
+              const SizedBox(height: 12),
+              wrapCard(
+                Row(
+                  children: [
+                    Icon(
+                      Icons.key_rounded,
+                      size: 22,
+                      color: theme.colors.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SelectableText(
+                        _resultKey!,
+                        style: TextStyle(
+                          color: theme.colors.onSurface,
+                          fontSize: 15,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                    MiuixTextButton(
+                      '复制',
+                      onPressed: _copy,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -6,7 +6,7 @@ import 'package:flutter_miuix/miuix.dart';
 
 /// 联网状态页（InstallerX 风格）：
 /// 顶部一张横向状态卡片（大图标 + 状态文字），
-/// 下方「机型」「系统」各自独立卡片。
+/// 下方「机型」「系统」各自独立卡片，相互有间距。
 class NetworkStatusPage extends StatefulWidget {
   const NetworkStatusPage({super.key});
 
@@ -83,9 +83,31 @@ class _NetworkStatusPageState extends State<NetworkStatusPage> {
     }
   }
 
+  /// 统一信息卡片样式：圆角 + 阴影 + 白底（浮在灰背景上）
+  Widget _infoCard(BuildContext context, Widget child) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = MiuixTheme.of(context);
+    final surface = Theme.of(context).colorScheme.surface;
     final statusColor =
         _checking ? theme.colors.onSurfaceVariantSummary
         : _online ? theme.colors.primary
@@ -99,102 +121,113 @@ class _NetworkStatusPageState extends State<NetworkStatusPage> {
         : _online ? '已联网'
         : '未联网';
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-      children: [
-        // 顶部横向状态卡片：大图标 + 状态文字并排（胶囊）
-        MiuixCard(
-          cornerRadius: 28,
-          insideMargin: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Icon(statusIcon, size: 48, color: statusColor),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    MiuixText(
-                      '网络状态',
-                      fontSize: 14,
-                      color: theme.colors.onSurfaceVariantSummary,
-                    ),
-                    const SizedBox(height: 2),
-                    MiuixText(
-                      statusText,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                    ),
-                  ],
+    return Container(
+      color: theme.colors.background,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+        children: [
+          // 顶部横向状态卡片：白色圆角卡片浮在背景上
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
                 ),
-              ),
-            ],
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(statusIcon, size: 48, color: statusColor),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      MiuixText(
+                        '网络状态',
+                        fontSize: 14,
+                        color: theme.colors.onSurfaceVariantSummary,
+                      ),
+                      const SizedBox(height: 2),
+                      MiuixText(
+                        statusText,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        // 机型卡片（胶囊）
-        MiuixCard(
-          cornerRadius: 28,
-          insideMargin: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(
-                Icons.smartphone_rounded,
-                size: 22,
-                color: theme.colors.onSurfaceVariantSummary,
-              ),
-              const SizedBox(width: 12),
-              MiuixText(
-                '机型',
-                fontSize: 15,
-                color: theme.colors.onSurfaceVariantSummary,
-              ),
-              const Spacer(),
-              Flexible(
-                child: MiuixText(
-                  _deviceModel,
+          const SizedBox(height: 12),
+          // 机型卡片
+          _infoCard(
+            context,
+            Row(
+              children: [
+                Icon(
+                  Icons.smartphone_rounded,
+                  size: 22,
+                  color: theme.colors.onSurfaceVariantSummary,
+                ),
+                const SizedBox(width: 12),
+                MiuixText(
+                  '机型',
                   fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  color: theme.colors.onSurfaceVariantSummary,
                 ),
-              ),
-            ],
+                const Spacer(),
+                Flexible(
+                  child: MiuixText(
+                    _deviceModel,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        // 系统卡片（胶囊）
-        MiuixCard(
-          cornerRadius: 28,
-          insideMargin: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(
-                Icons.android_rounded,
-                size: 22,
-                color: theme.colors.onSurfaceVariantSummary,
-              ),
-              const SizedBox(width: 12),
-              MiuixText(
-                '系统',
-                fontSize: 15,
-                color: theme.colors.onSurfaceVariantSummary,
-              ),
-              const Spacer(),
-              Flexible(
-                child: MiuixText(
-                  _system,
+          // 系统卡片
+          _infoCard(
+            context,
+            Row(
+              children: [
+                Icon(
+                  Icons.android_rounded,
+                  size: 22,
+                  color: theme.colors.onSurfaceVariantSummary,
+                ),
+                const SizedBox(width: 12),
+                MiuixText(
+                  '系统',
                   fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  color: theme.colors.onSurfaceVariantSummary,
                 ),
-              ),
-            ],
+                const Spacer(),
+                Flexible(
+                  child: MiuixText(
+                    _system,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
